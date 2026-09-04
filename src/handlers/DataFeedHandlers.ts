@@ -5,15 +5,16 @@
  */
 import { indexer } from "envio";
 
+const FIELDS = { instruction: ["args", "accounts"], transaction: ["signature"] } as const;
+
 indexer.onInstruction(
-  { program: "DataFeed", instruction: "update_feed" },
+  { program: "DataFeed", instruction: "update_feed", fields: FIELDS },
   async ({ instruction, context }) => {
-    const { transaction, block } = instruction;
-    const { args, accounts } = instruction.params!;
-    const txSig = transaction.signatures[0] ?? "";
+    const { args, accounts, transaction, block } = instruction;
+    const txSig = transaction.signature;
     context.FeedUpdate.set({
       id: txSig,
-      feed: accounts.feed,
+      feed: accounts.feed.address,
       kind: "auto",
       price: undefined,
       decimals: undefined,
@@ -27,14 +28,13 @@ indexer.onInstruction(
 );
 
 indexer.onInstruction(
-  { program: "DataFeed", instruction: "update_manual_feed" },
+  { program: "DataFeed", instruction: "update_manual_feed", fields: FIELDS },
   async ({ instruction, context }) => {
-    const { transaction, block } = instruction;
-    const { args, accounts } = instruction.params!;
-    const txSig = transaction.signatures[0] ?? "";
+    const { args, accounts, transaction, block } = instruction;
+    const txSig = transaction.signature;
     context.FeedUpdate.set({
       id: txSig,
-      feed: accounts.manual_feed,
+      feed: accounts.manual_feed.address,
       kind: "manual",
       price: args.price === null ? undefined : BigInt(args.price),
       decimals: args.decimals === null ? undefined : args.decimals,

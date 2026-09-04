@@ -5,10 +5,9 @@ description: >-
   mint_vaults + data_feed programs, via HyperSync.
 ecosystem: svm
 chains:
-  - start_block: 393400000
+  - id: solana
+    start_block: 393400000
     experimental:
-      hypersync_config:
-        url: https://solana.hypersync.xyz
       programs:
         - name: MidasVaults
           program_id: MidasZepq8k2oFNCCm1rm31rbbj68JSPJeXwqQu6NfZ
@@ -16,45 +15,25 @@ chains:
           instructions:
             - name: mint_request
               discriminator: "0xbf882e24dd9332c1"
-              field_selection:
-                transaction_fields: [signatures]
             - name: approve_mint_request
               discriminator: "0x76197aacec59274c"
-              field_selection:
-                transaction_fields: [signatures]
             - name: reject_mint_request
               discriminator: "0x5f8e935516e65f9e"
-              field_selection:
-                transaction_fields: [signatures]
             - name: mint_instant
               discriminator: "0x06570114f4a18552"
-              field_selection:
-                transaction_fields: [signatures]
             - name: redeem_request
               discriminator: "0xed1e71de7fe6cbf3"
-              field_selection:
-                transaction_fields: [signatures]
             - name: approve_redeem_request
               discriminator: "0xd9557216f5ce0214"
-              field_selection:
-                transaction_fields: [signatures]
             - name: reject_redeem_request
               discriminator: "0x8f2d42b63ea96cd4"
-              field_selection:
-                transaction_fields: [signatures]
             - name: redeem_instant
               discriminator: "0x7e3f068bd53c109d"
-              field_selection:
-                transaction_fields: [signatures]
         - name: DataFeed
           program_id: MDF1kkcgJqyizY8k3U1ESAxLBYFYmE3qTwxf2pmGE1s
           idl: ./idl/data_feed.json
           instructions:
             - name: update_feed
               discriminator: "0xde063483ad5171f7"
-              field_selection:
-                transaction_fields: [signatures]
             - name: update_manual_feed
               discriminator: "0x2a3f6e2314840ce6"
-              field_selection:
-                transaction_fields: [signatures]

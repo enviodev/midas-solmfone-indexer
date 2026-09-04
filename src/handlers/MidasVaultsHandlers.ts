@@ -1,11 +1,13 @@
 /*
  * Midas solmFONE — mint/redeem lifecycle on the MidasVaults program.
  * SVM has no event handlers, so every entity is built from onInstruction
- * with an Anchor IDL supplying decoded `args`/`accounts`.
+ * with an Anchor IDL supplying decoded `args`/`accounts`. `fields` opts each
+ * registration into the instruction args/accounts and the tx signature.
  */
 import { indexer, type VaultStats } from "envio";
 
 const STATS_ID = "global";
+const FIELDS = { instruction: ["args", "accounts"], transaction: ["signature"] } as const;
 
 async function bumpStats(
   context: { VaultStats: { get: (id: string) => Promise<VaultStats | undefined>; set: (e: VaultStats) => void } },
@@ -41,18 +43,17 @@ async function bumpStats(
 }
 
 indexer.onInstruction(
-  { program: "MidasVaults", instruction: "mint_request" },
+  { program: "MidasVaults", instruction: "mint_request", fields: FIELDS },
   async ({ instruction, context }) => {
-    const { transaction, block } = instruction;
-    const { args, accounts } = instruction.params!;
+    const { args, accounts, transaction, block } = instruction;
     context.MintRequest.set({
-      id: accounts.mint_request,
-      minterVault: accounts.minter_vault,
-      signer: accounts.signer,
-      paymentMint: accounts.payment_mint,
+      id: accounts.mint_request.address,
+      minterVault: accounts.minter_vault.address,
+      signer: accounts.signer.address,
+      paymentMint: accounts.payment_mint.address,
       amountToken: BigInt(args.amount_token),
       status: "Requested",
-      requestTxSig: transaction.signatures[0] ?? "",
+      requestTxSig: transaction.signature,
       requestSlot: block.slot,
       approveTxSig: undefined,
       approveSlot: undefined,
@@ -65,16 +66,15 @@ indexer.onInstruction(
 );
 
 indexer.onInstruction(
-  { program: "MidasVaults", instruction: "approve_mint_request" },
+  { program: "MidasVaults", instruction: "approve_mint_request", fields: FIELDS },
   async ({ instruction, context }) => {
-    const { transaction, block } = instruction;
-    const { args, accounts } = instruction.params!;
-    const existing = await context.MintRequest.get(accounts.mint_request);
+    const { args, accounts, transaction, block } = instruction;
+    const existing = await context.MintRequest.get(accounts.mint_request.address);
     if (existing) {
       context.MintRequest.set({
         ...existing,
         status: "Approved",
-        approveTxSig: transaction.signatures[0] ?? "",
+        approveTxSig: transaction.signature,
         approveSlot: block.slot,
         newOutRate: BigInt(args.new_out_rate),
       });
@@ -84,16 +84,15 @@ indexer.onInstruction(
 );
 
 indexer.onInstruction(
-  { program: "MidasVaults", instruction: "reject_mint_request" },
+  { program: "MidasVaults", instruction: "reject_mint_request", fields: FIELDS },
   async ({ instruction, context }) => {
-    const { transaction, block } = instruction;
-    const { accounts } = instruction.params!;
-    const existing = await context.MintRequest.get(accounts.mint_request);
+    const { accounts, transaction, block } = instruction;
+    const existing = await context.MintRequest.get(accounts.mint_request.address);
     if (existing) {
       context.MintRequest.set({
         ...existing,
         status: "Rejected",
-        rejectTxSig: transaction.signatures[0] ?? "",
+        rejectTxSig: transaction.signature,
         rejectSlot: block.slot,
       });
     }
@@ -102,17 +101,16 @@ indexer.onInstruction(
 );
 
 indexer.onInstruction(
-  { program: "MidasVaults", instruction: "mint_instant" },
+  { program: "MidasVaults", instruction: "mint_instant", fields: FIELDS },
   async ({ instruction, context }) => {
-    const { transaction, block } = instruction;
-    const { args, accounts } = instruction.params!;
-    const txSig = transaction.signatures[0] ?? "";
+    const { args, accounts, transaction, block } = instruction;
+    const txSig = transaction.signature;
     const amountToken = BigInt(args.amount_token);
     context.InstantMint.set({
       id: txSig,
-      signer: accounts.signer,
-      minterVault: accounts.minter_vault,
-      paymentMint: accounts.payment_mint,
+      signer: accounts.signer.address,
+      minterVault: accounts.minter_vault.address,
+      paymentMint: accounts.payment_mint.address,
       amountToken,
       minReceiveAmount: BigInt(args.min_receive_amount),
       slot: block.slot,
@@ -123,18 +121,17 @@ indexer.onInstruction(
 );
 
 indexer.onInstruction(
-  { program: "MidasVaults", instruction: "redeem_request" },
+  { program: "MidasVaults", instruction: "redeem_request", fields: FIELDS },
   async ({ instruction, context }) => {
-    const { transaction, block } = instruction;
-    const { args, accounts } = instruction.params!;
+    const { args, accounts, transaction, block } = instruction;
     context.RedeemRequest.set({
-      id: accounts.redeem_request,
-      redeemerVault: accounts.redeemer_vault,
-      signer: accounts.signer,
-      paymentMint: accounts.payment_mint,
+      id: accounts.redeem_request.address,
+      redeemerVault: accounts.redeemer_vault.address,
+      signer: accounts.signer.address,
+      paymentMint: accounts.payment_mint.address,
       amountMToken: BigInt(args.amount_m_token),
       status: "Requested",
-      requestTxSig: transaction.signatures[0] ?? "",
+      requestTxSig: transaction.signature,
       requestSlot: block.slot,
       approveTxSig: undefined,
       approveSlot: undefined,
@@ -147,16 +144,15 @@ indexer.onInstruction(
 );
 
 indexer.onInstruction(
-  { program: "MidasVaults", instruction: "approve_redeem_request" },
+  { program: "MidasVaults", instruction: "approve_redeem_request", fields: FIELDS },
   async ({ instruction, context }) => {
-    const { transaction, block } = instruction;
-    const { args, accounts } = instruction.params!;
-    const existing = await context.RedeemRequest.get(accounts.redeem_request);
+    const { args, accounts, transaction, block } = instruction;
+    const existing = await context.RedeemRequest.get(accounts.redeem_request.address);
     if (existing) {
       context.RedeemRequest.set({
         ...existing,
         status: "Approved",
-        approveTxSig: transaction.signatures[0] ?? "",
+        approveTxSig: transaction.signature,
         approveSlot: block.slot,
         newMTokenRate: BigInt(args.new_m_token_rate),
       });
@@ -166,16 +162,15 @@ indexer.onInstruction(
 );
 
 indexer.onInstruction(
-  { program: "MidasVaults", instruction: "reject_redeem_request" },
+  { program: "MidasVaults", instruction: "reject_redeem_request", fields: FIELDS },
   async ({ instruction, context }) => {
-    const { transaction, block } = instruction;
-    const { accounts } = instruction.params!;
-    const existing = await context.RedeemRequest.get(accounts.redeem_request);
+    const { accounts, transaction, block } = instruction;
+    const existing = await context.RedeemRequest.get(accounts.redeem_request.address);
     if (existing) {
       context.RedeemRequest.set({
         ...existing,
         status: "Rejected",
-        rejectTxSig: transaction.signatures[0] ?? "",
+        rejectTxSig: transaction.signature,
         rejectSlot: block.slot,
       });
     }
@@ -184,17 +179,16 @@ indexer.onInstruction(
 );
 
 indexer.onInstruction(
-  { program: "MidasVaults", instruction: "redeem_instant" },
+  { program: "MidasVaults", instruction: "redeem_instant", fields: FIELDS },
   async ({ instruction, context }) => {
-    const { transaction, block } = instruction;
-    const { args, accounts } = instruction.params!;
-    const txSig = transaction.signatures[0] ?? "";
+    const { args, accounts, transaction, block } = instruction;
+    const txSig = transaction.signature;
     const amountMToken = BigInt(args.amount_m_token);
     context.InstantRedeem.set({
       id: txSig,
-      signer: accounts.signer,
-      redeemerVault: accounts.redeemer_vault,
-      paymentMint: accounts.payment_mint,
+      signer: accounts.signer.address,
+      redeemerVault: accounts.redeemer_vault.address,
+      paymentMint: accounts.payment_mint.address,
       amountMToken,
       minReceiveAmount: BigInt(args.min_receive_amount),
       slot: block.slot,
