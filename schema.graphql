@@ -1,0 +1,86 @@
+"A queued issuance request, created by mint_request and resolved by approve/reject."
+type MintRequest {
+  id: ID! # the mint_request PDA address
+  minterVault: String!
+  signer: String!
+  paymentMint: String!
+  amountToken: BigInt!
+  status: String! # Requested | Approved | Rejected
+  requestTxSig: String!
+  requestSlot: Int!
+  approveTxSig: String
+  approveSlot: Int
+  newOutRate: BigInt
+  rejectTxSig: String
+  rejectSlot: Int
+}
+
+"An atomic issuance — requested and settled in one instruction."
+type InstantMint {
+  id: ID! # tx signature
+  signer: String!
+  minterVault: String!
+  paymentMint: String!
+  amountToken: BigInt!
+  minReceiveAmount: BigInt!
+  slot: Int!
+  txSig: String!
+}
+
+"A queued redemption request, created by redeem_request and resolved by approve/reject."
+type RedeemRequest {
+  id: ID! # the redeem_request PDA address
+  redeemerVault: String!
+  signer: String!
+  paymentMint: String!
+  amountMToken: BigInt!
+  status: String! # Requested | Approved | Rejected
+  requestTxSig: String!
+  requestSlot: Int!
+  approveTxSig: String
+  approveSlot: Int
+  newMTokenRate: BigInt
+  rejectTxSig: String
+  rejectSlot: Int
+}
+
+"An atomic redemption — requested and settled in one instruction."
+type InstantRedeem {
+  id: ID! # tx signature
+  signer: String!
+  redeemerVault: String!
+  paymentMint: String!
+  amountMToken: BigInt!
+  minReceiveAmount: BigInt!
+  slot: Int!
+  txSig: String!
+}
+
+"A price/feed-config change on either the automated or manual data feed."
+type FeedUpdate {
+  id: ID! # tx signature
+  feed: String!
+  kind: String! # auto | manual
+  price: BigInt
+  decimals: Int
+  minPrice: BigInt
+  maxPrice: BigInt
+  maxStaleness: Int
+  slot: Int!
+  txSig: String!
+}
+
+"Single-row rollup across the whole vault, for headline demo numbers."
+type VaultStats {
+  id: ID! # "global"
+  mintRequestsCreated: Int!
+  mintRequestsApproved: Int!
+  mintRequestsRejected: Int!
+  instantMints: Int!
+  redeemRequestsCreated: Int!
+  redeemRequestsApproved: Int!
+  redeemRequestsRejected: Int!
+  instantRedeems: Int!
+  totalMintVolume: BigInt!
+  totalRedeemVolume: BigInt!
+}
